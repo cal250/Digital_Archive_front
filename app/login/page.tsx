@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff, FileText } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { api, saveAuthToken } from "@/lib/api"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -26,23 +27,18 @@ export default function LoginPage() {
     setError("")
 
     try {
-      // Placeholder API call - replace with actual authentication
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+      const data = await api.post<{ success: boolean; token: string; user: any }>("/api/auth/login", {
+        email,
+        password,
       })
-
-      if (response.ok) {
+      if (data?.token) {
+        saveAuthToken(data.token)
         router.push("/dashboard")
       } else {
-        const data = await response.json()
-        setError(data.message || "Login failed")
+        setError("Login failed")
       }
-    } catch (error) {
-      setError("Network error. Please try again.")
+    } catch (error: any) {
+      setError(error?.message || "Network error. Please try again.")
     } finally {
       setIsLoading(false)
     }
