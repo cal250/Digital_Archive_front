@@ -1,8 +1,8 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import type React from "react"
 
- 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Eye, EyeOff, FileText } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { api } from "@/lib/api"
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -29,32 +28,16 @@ export default function SignupPage() {
   const [error, setError] = useState("")
   const router = useRouter()
 
-  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([])
-  const [deptLoading, setDeptLoading] = useState(false)
-  const [deptError, setDeptError] = useState<string>("")
-
-  useEffect(() => {
-    const loadDepartments = async () => {
-      setDeptLoading(true)
-      setDeptError("")
-      try {
-        const res = await api.get<{ success: boolean; departments: { id: string; name: string }[] }>(
-          "/api/departments/public",
-          { cache: "no-store" }
-        )
-        if (res?.success) {
-          setDepartments(res.departments)
-        } else {
-          setDeptError("Failed to load departments")
-        }
-      } catch (e: any) {
-        setDeptError(e?.message || "Failed to load departments")
-      } finally {
-        setDeptLoading(false)
-      }
-    }
-    loadDepartments()
-  }, [])
+  const departments = [
+    "Human Resources",
+    "Engineering",
+    "Marketing",
+    "Sales",
+    "Finance",
+    "Operations",
+    "Legal",
+    "IT Support",
+  ]
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -72,19 +55,29 @@ export default function SignupPage() {
     }
 
     try {
-      const res = await api.post<{ success: boolean; message: string; token: string }>("/api/auth/register", {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password,
-        departmentId: formData.department,
+      // Placeholder API call - replace with actual authentication
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password,
+          department: formData.department,
+        }),
       })
 
-      if (res?.success) {
+      if (response.ok) {
         router.push("/login?message=Account created successfully")
+      } else {
+        const data = await response.json()
+        setError(data.message || "Signup failed")
       }
-    } catch (error: any) {
-      setError(error?.message || "Network error. Please try again.")
+    } catch (error) {
+      setError("Network error. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -147,26 +140,16 @@ export default function SignupPage() {
 
             <div className="space-y-2">
               <Label htmlFor="department">Department</Label>
-              <Select
-                value={formData.department}
-                onValueChange={(value) => handleInputChange("department", value)}
-                disabled={deptLoading || departments.length === 0}
-              >
+              <Select value={formData.department} onValueChange={(value) => handleInputChange("department", value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder={deptLoading ? "Loading..." : departments.length ? "Select your department" : (deptError || "No departments available")} />
+                  <SelectValue placeholder="Select your department" />
                 </SelectTrigger>
                 <SelectContent>
-                  {departments.length === 0 ? (
-                    <SelectItem value="__no_departments__" disabled>
-                      {deptLoading ? "Loading..." : (deptError || "No departments available")}
+                  {departments.map((dept) => (
+                    <SelectItem key={dept} value={dept}>
+                      {dept}
                     </SelectItem>
-                  ) : (
-                    departments.map((dept) => (
-                      <SelectItem key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </SelectItem>
-                    ))
-                  )}
+                  ))}
                 </SelectContent>
               </Select>
             </div>
