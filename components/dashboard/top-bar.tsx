@@ -14,6 +14,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Menu, Search, Bell, Sun, Moon, User, Settings, LogOut } from "lucide-react"
 import { useTheme } from "next-themes"
+import { useRouter } from "next/navigation"
+import { clearAuthToken } from "@/lib/api"
 
 interface TopBarProps {
   onMenuClick: () => void
@@ -21,6 +23,12 @@ interface TopBarProps {
 
 export function TopBar({ onMenuClick }: TopBarProps) {
   const { theme, setTheme } = useTheme()
+  const router = useRouter()
+
+  const handleLogout = () => {
+    clearAuthToken()
+    router.push("/login")
+  }
 
   return (
     <header className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
@@ -109,7 +117,7 @@ export function TopBar({ onMenuClick }: TopBarProps) {
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Log out
               </DropdownMenuItem>
